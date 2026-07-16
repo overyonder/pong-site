@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pong AI — Neural-network training in WebAssembly</title>
+    <meta name="description" content="Pong AI trains a multilayer perceptron to play Pong by running native WebAssembly bytecode in the browser." />
+    <link rel="canonical" href="https://pong.over-yonder.tech/" />
+    <meta property="og:title" content="Pong AI — Neural-network training in WebAssembly" />
+    <meta property="og:description" content="Pong AI trains a multilayer perceptron to play Pong by running native WebAssembly bytecode in the browser." />
+    <meta property="og:url" content="https://pong.over-yonder.tech/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://pong.over-yonder.tech/social-card.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="https://over-yonder.tech/archived/legacy-site/assets/logo.webp" type="image/webp" />
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Pong AI","url":"https://pong.over-yonder.tech/","description":"Pong AI trains a multilayer perceptron to play Pong by running native WebAssembly bytecode in the browser.","applicationCategory":"GameApplication","operatingSystem":"Web browser"}</script>
+    <style>
+      html,
+      body {
+        margin: 0px;
+        padding: 0px;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #000;
+      }
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        width: 100vw;
+        color: #fff;
+        font-family: "Segoe UI", "Arial", "Helvetica Neue", Arial, sans-serif;
+        font-size: 1.1rem;
+        background: #000;
+      }
+      .container {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: stretch;
+        width: 80%;
+        height: 80%;
+        max-width: 1300px;
+        background: rgba(20, 20, 20, 0.92);
+        border-radius: 18px;
+        box-shadow: 0 4px 32px 0 rgba(0, 0, 0, 0.7);
+        padding: 2.5rem 2rem 2rem 2rem;
+        gap: 2.5rem;
+      }
+      .description {
+        flex: 1.1 1 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: flex-start;
+        width: 95%;
+        height: 95%;
+        overflow-y: auto;
+      }
+      h1 {
+        color: #fff;
+        font-size: 2rem;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-shadow: 0 2px 12px #222;
+        margin-top: 0;
+        margin-bottom: 1.2rem;
+      }
+      p {
+        color: #e0e0e0;
+        line-height: 1.6;
+        margin: 0.7rem 0;
+        text-align: left;
+        font-size: 1.13rem;
+      }
+      a {
+        color: #4fd1ff;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s;
+      }
+      a:hover {
+        color: #fff;
+        text-decoration: underline;
+      }
+      li {
+        font-size: 0.6rem;
+      }
+      .canvas-container {
+        flex: 1.7 1 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 95%;
+        height: 95%;
+      }
+      canvas {
+        margin: 0px auto;
+        padding: 20px;
+        width: 95%;
+        height: 95%;
+        background: #000;
+        z-index: 0;
+        border-radius: 10px;
+        box-shadow: 0 2px 16px 0 rgba(0, 0, 0, 0.6);
+        display: block;
+      }
+      @media (max-width: 800px) {
+        .container {
+          flex-direction: column;
+        }
+      }
+    </style>
+    <!-- Cloudflare Web Analytics -->
+  <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{&quot;token&quot;:&quot;7462f5834b4745449f0f5e46d98a53ab&quot;}"></script>
+  <!-- End Cloudflare Web Analytics -->
+</head>
+
+  <body>
+    <div class="container">
+      <div class="description">
+        <h1>Pong AI</h1>
+        <p>
+          Pong AI trains an artificial-intelligence (AI) player in the browser. Its
+          controller is a multilayer perceptron (MLP), a small neural network
+          evolved through repeated games of Pong.
+        </p>
+        <p>
+          The debug information above each agent shows the 21 neurons that make
+          up its "brain".
+        </p>
+        <p>
+          Press <kbd>N</kbd> to hide the debug information.<br />
+          Press <kbd>P</kbd> to cycle between three control modes: AI vs AI, AI vs human,
+          and human vs human.<br />
+          Control the left paddle with the W and S keys.<br />
+          Control the right paddle with the ↑ and ↓ arrow keys.
+        </p>
+        <p>See if you can beat the AI you trained!</p>
+        <p>
+          The code is available on
+          <a
+            href="https://github.com/kaistarkk/CITS4404"
+            target="_blank"
+            rel="noopener"
+            >GitHub</a
+          >.
+        </p>
+        <details>
+          <summary><strong>Technical details:</strong></summary>
+          <ul>
+            <li>
+              Macroquad renders the game through the browser's Web Graphics
+              Library (WebGL) interface using
+              <a
+                href="https://github.com/not-fl3/macroquad"
+                target="_blank"
+                rel="noopener"
+                >Macroquad</a
+              >
+            </li>
+            <li>
+              The AI is implemented in Rust and compiled to WebAssembly to
+              run in the browser.
+            </li>
+            <li>
+              The neural network is a 3-layer MLP with 8-16-4-1 layer
+              arrangement.
+            </li>
+            <li>
+              Each genetic-algorithm generation contains 128 players. Browser
+              training runs for 100 generations, with every player competing in
+              a full round-robin tournament.
+            </li>
+            <li>
+              The mutation strategy is random Gaussian mutation with no
+              crossover.
+            </li>
+            <li>
+              Hidden layer activations are rectified linear units (ReLU).
+            </li>
+            <li>
+              The output layer activation is a hyperbolic tangent (tanh).
+            </li>
+            <li>
+              Each player's fitness is its zero-sum score across the tournament.
+            </li>
+            <li>Pre-trained champion:
+            <ul>
+              <li>
+                The initial population includes a locally trained champion to
+                reduce the work on your processor. The generations shown on
+                screen, including the final result, are still trained in your
+                browser through WebAssembly with a small JavaScript loader.
+              </li>
+              <li>
+                The champion came from several thousand local generations that
+                tested tournament selection, different fitness functions and
+                several mutation and crossover strategies. Experiments also used
+                graphics-processor compute, but simple multithreaded processor
+                training produced the best results for this small workload.
+              </li>
+            </ul>
+            </li>
+          </ul>
+        </details>
+        <details>
+          <summary><strong>Acknowledgements:</strong></summary>
+          <p>
+            This project revisits a formative collaboration with a former peer
+            whose early contributions shaped its trajectory. The original
+            implementation—a C++ genetic algorithm with a neural network to
+            learn Pong—was largely his work. At the time, I lacked the technical
+            depth to fully grasp it. He brought competitive programming rigor
+            and algorithmic fluency that exceeded my understanding then.
+          </p>
+          <p>
+            Rebuilding it now in Rust serves a dual purpose: technical
+            redemption and continued learning. The implementation uses ordinary
+            compiler optimization, including automatic vectorization where the
+            compiler finds suitable loops. More importantly, it’s been an
+            exercise in understanding compilation, lowering and systems-level
+            design—concepts I hadn’t appreciated during the original effort.
+          </p>
+          <p>
+            The broader arc is about catching up with the field. Back in 2015,
+            transformers didn’t exist in the mainstream curriculum.
+            Reconstructing this project from first principles is a way to
+            retrace the path from classical neural networks to the architectures
+            that define modern AI—following the breadcrumbs, step by step.
+          </p>
+        </details>
+      </div>
+      <div class="canvas-container">
+        <canvas id="glcanvas" tabindex="1"></canvas>
+      </div>
+    </div>
+    <script src="https://not-fl3.github.io/miniquad-samples/mq_js_bundle.js"></script>
+    <script>
+      load("pong_ai.wasm");
+    </script>
+  </body>
+</html>
